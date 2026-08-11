@@ -75,7 +75,7 @@ export default function HusholdningOppsett({ brukernavn, onFerdig }) {
               value={kode}
               onChange={(e) => setKode(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && utfor()}
-              placeholder="Kode, f.eks. A3A51E"
+              placeholder="Kode, f.eks. A1A41B"
               autoCapitalize="characters"
               autoCorrect="off"
               style={{ ...s.input, width: "100%", letterSpacing: "0.12em", fontWeight: 600 }}
