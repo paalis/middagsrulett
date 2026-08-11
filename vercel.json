@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/middagsplan.ics",
+      "destination": "/api/kalender"
+    }
+  ]
+}
