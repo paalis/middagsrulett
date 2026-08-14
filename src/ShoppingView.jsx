@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Check, RotateCcw, ShoppingCart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, RotateCcw, ShoppingCart, Copy } from "lucide-react";
 import { C, SANS, SERIF, s } from "./styles.js";
 import { mondayOf, addDays, toISO, dateLabel, weekNumber } from "./lib/dates.js";
 import { playCheck } from "./lib/sound.js";
@@ -7,6 +7,7 @@ import { playCheck } from "./lib/sound.js";
 export default function ShoppingView({ retter, ingredienser, planlagt }) {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [checked, setChecked] = useState({});
+  const [copied, setCopied] = useState(false);
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const weekISO = days.map(toISO);
@@ -57,6 +58,19 @@ export default function ShoppingView({ retter, ingredienser, planlagt }) {
 
   const doneCount = list.filter((i) => checked[i.key]).length;
 
+  const copyList = async () => {
+    const text = list
+      .map((item) => `${item.mengder.length > 0 ? `${item.mengder.join(" + ")} ` : ""}${item.navn}`)
+      .join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard API unavailable or denied; ignore silently.
+    }
+  };
+
   return (
     <div style={s.panel}>
       <div style={h.nav}>
@@ -88,7 +102,11 @@ export default function ShoppingView({ retter, ingredienser, planlagt }) {
         <>
           <div style={h.summary}>
             <ShoppingCart size={15} strokeWidth={2.2} />
-            <span>{doneCount} av {list.length} varer</span>
+            <span style={{ flex: 1 }}>{doneCount} av {list.length} varer</span>
+            <button onClick={copyList} style={{ ...s.btnGhost, padding: "5px 11px", fontSize: "12px" }}>
+              {copied ? <Check size={13} strokeWidth={2.2} /> : <Copy size={13} strokeWidth={2.2} />}
+              {copied ? "Kopiert" : "Kopier"}
+            </button>
             {doneCount > 0 && (
               <button onClick={() => setChecked({})} style={{ ...s.btnGhost, padding: "5px 11px", fontSize: "12px" }}>
                 <RotateCcw size={13} strokeWidth={2.2} />
