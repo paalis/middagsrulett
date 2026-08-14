@@ -6,6 +6,22 @@ import { addDays, toISO, relativeLabel, isWeekendDate } from "./lib/dates.js";
 
 const WHEEL_SIZE = 300;
 
+function wheelColorsFor(n) {
+  if (n <= 0) return [];
+  const colors = [];
+  for (let i = 0; i < n; i++) {
+    let idx = i % WHEEL_COLORS.length;
+    if (WHEEL_COLORS[idx] === colors[i - 1]) idx = (idx + 1) % WHEEL_COLORS.length;
+    colors.push(WHEEL_COLORS[idx]);
+  }
+  if (n > 1 && colors[n - 1] === colors[0]) {
+    const clash = colors[n - 1];
+    const replacement = WHEEL_COLORS.find((c) => c !== clash && c !== colors[n - 2]);
+    if (replacement) colors[n - 1] = replacement;
+  }
+  return colors;
+}
+
 export default function RouletteView({ retter, onPlan }) {
   const [mode, setMode] = useState(isWeekendDate(new Date()) ? "helg" : "hverdag");
   const [soundOn, setSoundOn] = useState(true);
@@ -85,13 +101,14 @@ export default function RouletteView({ retter, onPlan }) {
     const count = list.length;
     const slice = count > 0 ? 360 / count : 360;
     const fontSize = count <= 6 ? 14 : count <= 9 ? 12.5 : count <= 12 ? 11 : 9.5;
+    const segmentColors = wheelColorsFor(count);
     const bg =
       count === 0
         ? C.panelAlt
         : count === 1
-        ? WHEEL_COLORS[0]
-        : `conic-gradient(${list
-            .map((_, i) => `${WHEEL_COLORS[i % WHEEL_COLORS.length]} ${i * slice}deg ${(i + 1) * slice}deg`)
+        ? segmentColors[0]
+        : `conic-gradient(${segmentColors
+            .map((color, i) => `${color} ${i * slice}deg ${(i + 1) * slice}deg`)
             .join(", ")})`;
 
     return (

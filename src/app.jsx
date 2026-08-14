@@ -103,6 +103,12 @@ export default function App() {
     if (error) setSyncError(true);
   };
 
+  const movePlan = async (id, dato) => {
+    setPlanlagt((prev) => prev.map((p) => (p.id === id ? { ...p, dato } : p)));
+    const { error } = await supabase.from("planlagt").update({ dato }).eq("id", id);
+    if (error) { setSyncError(true); fetchAll(); }
+  };
+
   const saveRecipe = async (rettId, oppskrift) => {
     const { error } = await supabase.from("retter").update({ oppskrift }).eq("id", rettId);
     if (error) setSyncError(true);
@@ -260,6 +266,7 @@ export default function App() {
             planlagt={planlagt}
             onPlan={plan}
             onUnplan={unplan}
+            onMove={movePlan}
             onOpenRecipe={setEditingId}
             husholdning={husholdning}
           />

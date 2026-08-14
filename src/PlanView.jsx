@@ -1,12 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Plus, X, BookOpen } from "lucide-react";
 import { C, WHEEL_COLORS, SANS, SERIF, s } from "./styles.js";
 import { mondayOf, addDays, toISO, dayName, dateLabel, isToday, weekNumber } from "./lib/dates.js";
 import CalendarSync from "./CalendarSync.jsx";
 
-export default function PlanView({ retter, planlagt, onPlan, onUnplan, onOpenRecipe, husholdning }) {
+const HOLD_MS = 90;
+const MOVE_CANCEL_PX = 10;
+
+export default function PlanView({ retter, planlagt, onPlan, onUnplan, onMove, onOpenRecipe, husholdning }) {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [pickerDate, setPickerDate] = useState(null);
+  const [drag, setDrag] = useState(null);
+  const pressRef = useRef(null);
+
+  useEffect(() => () => {
+    if (pressRef.current?.timer) clearTimeout(pressRef.current.timer);
+  }, []);
+
+  const handlePointerDown = (e, entry, dateIso, rett) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pressRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      timer: setTimeout(() => {
+        if (!pressRef.current) return;
+        setDrag({
+          pointerId: pressRef.current.pointerId,
+          entryId: entry.id,
+          fromDate: dateIso,
+          rett,
+          x: pressRef.current.startX,
+          y: pressRef.current.startY,
+          over: dateIso,
+        });
+      }, HOLD_MS),
+    };
+  };
+
+  const handlePointerMove = (e) => {
+    if (pressRef.current && pressRef.current.pointerId === e.pointerId && !drag) {
+      const dx = e.clientX - pressRef.current.startX;
+      const dy = e.clientY - pressRef.current.startY;
+      if (Math.hypot(dx, dy) > MOVE_CANCEL_PX) {
+        clearTimeout(pressRef.current.timer);
+        pressRef.current = null;
+      }
+      return;
+    }
+    if (drag && drag.pointerId === e.pointerId) {
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const dayEl = el?.closest("[data-day-iso]");
+      const over = dayEl?.getAttribute("data-day-iso") || drag.over;
+      setDrag((d) => d && { ...d, x: e.clientX, y: e.clientY, over });
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    if (pressRef.current && pressRef.current.pointerId === e.pointerId) {
+      clearTimeout(pressRef.current.timer);
+      pressRef.current = null;
+    }
+    if (drag && drag.pointerId === e.pointerId) {
+      const { entryId, fromDate, over } = drag;
+      setDrag(null);
+      if (over && over !== fromDate) onMove(entryId, over);
+    }
+  };
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const byDate = {};
@@ -53,14 +115,17 @@ export default function PlanView({ retter, planlagt, onPlan, onUnplan, onOpenRec
             const entries = byDate[iso] || [];
             const today = isToday(d);
             const picking = pickerDate === iso;
+            const isDropTarget = !!drag && drag.over === iso && drag.fromDate !== iso;
 
             return (
               <div
                 key={iso}
+                data-day-iso={iso}
                 style={{
                   ...p.dayRow,
-                  borderColor: today ? C.orange : C.border,
-                  background: today ? C.panelAlt : C.bg,
+                  borderColor: isDropTarget ? C.orange : today ? C.orange : C.border,
+                  borderStyle: isDropTarget ? "dashed" : "solid",
+                  background: today || isDropTarget ? C.panelAlt : C.bg,
                 }}
               >
                 <div style={p.dayHead}>
@@ -85,20 +150,29 @@ export default function PlanView({ retter, planlagt, onPlan, onUnplan, onOpenRec
                       const r = rettById[entry.rett_id];
                       if (!r) return null;
                       const color = WHEEL_COLORS[r.colorIdx % WHEEL_COLORS.length];
+                      const isDragging = drag?.entryId === entry.id;
                       return (
                         <div key={entry.id} style={p.mealChip}>
-                          {r.bilde_url ? (
-                            <img
-                              src={r.bilde_url}
-                              alt=""
-                              style={p.mealThumb}
-                              loading="lazy"
-                              onError={(ev) => { ev.currentTarget.style.display = "none"; }}
-                            />
-                          ) : (
-                            <span style={{ ...p.dot, background: color }} />
-                          )}
-                          <span style={p.mealName}>{r.name}</span>
+                          <div
+                            style={{ ...p.mealDragArea, opacity: isDragging ? 0.35 : 1 }}
+                            onPointerDown={(e) => handlePointerDown(e, entry, iso, r)}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerUp}
+                          >
+                            {r.bilde_url ? (
+                              <img
+                                src={r.bilde_url}
+                                alt=""
+                                style={p.mealThumb}
+                                loading="lazy"
+                                onError={(ev) => { ev.currentTarget.style.display = "none"; }}
+                              />
+                            ) : (
+                              <span style={{ ...p.dot, background: color }} />
+                            )}
+                            <span style={p.mealName}>{r.name}</span>
+                          </div>
                           <button
                             onClick={() => onOpenRecipe(r.id)}
                             aria-label={`Oppskrift for ${r.name}`}
@@ -162,6 +236,18 @@ export default function PlanView({ retter, planlagt, onPlan, onUnplan, onOpenRec
       </div>
 
       <CalendarSync token={husholdning?.kalender_token} />
+
+      {drag && createPortal(
+        <div style={{ ...p.dragGhost, left: drag.x, top: drag.y }}>
+          {drag.rett?.bilde_url ? (
+            <img src={drag.rett.bilde_url} alt="" style={p.mealThumb} />
+          ) : (
+            <span style={{ ...p.dot, background: WHEEL_COLORS[drag.rett?.colorIdx % WHEEL_COLORS.length] }} />
+          )}
+          <span style={p.mealName}>{drag.rett?.name}</span>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -195,6 +281,30 @@ const p = {
     border: `1px solid ${C.border}`,
     borderRadius: "999px",
     padding: "5px 8px 5px 6px",
+  },
+  mealDragArea: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flex: 1,
+    minWidth: 0,
+    cursor: "grab",
+    touchAction: "none",
+  },
+  dragGhost: {
+    position: "fixed",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    background: C.panel,
+    border: `1px solid ${C.orange}`,
+    borderRadius: "999px",
+    padding: "6px 14px 6px 8px",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+    pointerEvents: "none",
+    transform: "translate(-50%, -50%)",
+    zIndex: 1000,
+    fontFamily: SANS,
   },
   mealThumb: {
     width: "26px",
