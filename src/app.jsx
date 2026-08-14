@@ -104,8 +104,9 @@ export default function App() {
   };
 
   const movePlan = async (id, dato) => {
+    setPlanlagt((prev) => prev.map((p) => (p.id === id ? { ...p, dato } : p)));
     const { error } = await supabase.from("planlagt").update({ dato }).eq("id", id);
-    if (error) setSyncError(true);
+    if (error) { setSyncError(true); fetchAll(); }
   };
 
   const saveRecipe = async (rettId, oppskrift) => {

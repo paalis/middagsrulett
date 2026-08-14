@@ -5,7 +5,7 @@ import { C, WHEEL_COLORS, SANS, SERIF, s } from "./styles.js";
 import { mondayOf, addDays, toISO, dayName, dateLabel, isToday, weekNumber } from "./lib/dates.js";
 import CalendarSync from "./CalendarSync.jsx";
 
-const HOLD_MS = 180;
+const HOLD_MS = 90;
 const MOVE_CANCEL_PX = 10;
 
 export default function PlanView({ retter, planlagt, onPlan, onUnplan, onMove, onOpenRecipe, husholdning }) {
