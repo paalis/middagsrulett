@@ -15,12 +15,16 @@ export default function Dor({ klar, onApnet }) {
   const redusert = reduserBevegelse();
 
   useEffect(() => {
-    if (!klar || apner) return;
+    if (!klar) return;
     setApner(true);
     if (!redusert) playConfirm();
     const t = setTimeout(onApnet, redusert ? 120 : APNE_MS);
     return () => clearTimeout(t);
-  }, [klar, apner, onApnet, redusert]);
+    // Kjør kun når klar går fra usann til sann - apner/onApnet skal ikke trigge effekten på nytt,
+    // ellers kansellerer opprydningen den nettopp planlagte timeouten (setApner endrer apner,
+    // som lå i dependency-listen, og re-kjøringen sitt cleanup rakk å nulle den ut).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [klar]);
 
   return (
     <div style={{ ...s.page, alignItems: "center", justifyContent: "center", gap: "22px" }}>
