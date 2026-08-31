@@ -1,9 +1,8 @@
 import React, { useMemo } from "react";
-import { Carrot, Egg, Fish, Beef, Croissant, Apple, CookingPot, Utensils, Wine, Dices, Soup } from "lucide-react";
+import { Carrot, Egg, Fish, Beef, Croissant, Apple, CookingPot, Utensils, Wine, Soup } from "lucide-react";
 import { C, WHEEL_COLORS, SANS, SERIF } from "./styles.js";
-import { mondayOf, addDays, dayShort, dateLabel, isToday } from "./lib/dates.js";
 
-export const VARIANTER = ["hjul", "ingredienser", "terning", "dekketoy", "damp", "ukedager"];
+export const VARIANTER = ["hjul", "ingredienser", "dekketoy", "damp"];
 
 // Lengste variant lander på ~1500ms, så holder vi bildet et lite øyeblikk. Splashen vises aldri lenger enn dette.
 export const OPPSTART_MS = 1700;
@@ -104,16 +103,7 @@ function Ingredienser() {
   );
 }
 
-/* 3. Terningkast */
-function Terning() {
-  return (
-    <span className="drr-opp-terning">
-      <Dices size={88} strokeWidth={1.6} />
-    </span>
-  );
-}
-
-/* 4. Dekketøy som dekker bordet */
+/* 3. Dekketøy som dekker bordet */
 function Dekketoy() {
   return (
     <div className="drr-opp-bord">
@@ -130,7 +120,7 @@ function Dekketoy() {
   );
 }
 
-/* 5. Damp over gryta - den eneste som går i loop, brukt når vi faktisk venter */
+/* 4. Damp over gryta - den eneste som går i loop, brukt når vi faktisk venter */
 function Damp() {
   return (
     <div className="drr-opp-damp-wrap">
@@ -156,39 +146,11 @@ function Damp() {
   );
 }
 
-/* 6. Ukedagene som stemples inn */
-function Ukedager() {
-  const uke = useMemo(() => {
-    const start = mondayOf(new Date());
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, []);
-
-  return (
-    <div className="drr-opp-uke">
-      {uke.map((d, i) => {
-        const iDag = isToday(d);
-        return (
-          <span
-            key={i}
-            className={`drr-opp-dag${iDag ? " drr-opp-dag-idag" : ""}`}
-            style={{ animationDelay: `${i * 90}ms` }}
-          >
-            <span className="drr-opp-dag-navn">{dayShort(d)}</span>
-            {iDag && <span className="drr-opp-dag-dato">{dateLabel(d)}</span>}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
 const SCENER = {
   hjul: Hjul,
   ingredienser: Ingredienser,
-  terning: Terning,
   dekketoy: Dekketoy,
   damp: Damp,
-  ukedager: Ukedager,
 };
 
 const TITTEL = "Middagsrulett";
@@ -210,22 +172,7 @@ export default function Oppstart({ variant, onFerdig }) {
       <div className="drr-opp-scene" aria-hidden="true">
         <Scene />
       </div>
-      {valgt === "terning" ? (
-        <h1 className="drr-opp-tittel" aria-label={TITTEL}>
-          {TITTEL.split("").map((bokstav, i) => (
-            <span
-              key={i}
-              className="drr-opp-bokstav"
-              style={{ animationDelay: `${820 + i * 26}ms` }}
-              aria-hidden="true"
-            >
-              {bokstav}
-            </span>
-          ))}
-        </h1>
-      ) : (
-        <h1 className="drr-opp-tittel drr-opp-tittel-inn">{TITTEL}</h1>
-      )}
+      <h1 className="drr-opp-tittel drr-opp-tittel-inn">{TITTEL}</h1>
     </div>
   );
 }
@@ -267,9 +214,7 @@ const OPPSTART_CSS = `
   text-align: center;
 }
 .drr-opp-tittel-inn { animation: drrOppTittel 520ms cubic-bezier(0.2, 0.7, 0.3, 1) 950ms both; }
-.drr-opp-bokstav { display: inline-block; white-space: pre; animation: drrOppBokstav 380ms cubic-bezier(0.2, 1.5, 0.4, 1) both; }
 @keyframes drrOppTittel { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-@keyframes drrOppBokstav { from { opacity: 0; transform: translateY(-14px) scale(0.7); } to { opacity: 1; transform: none; } }
 
 /* 1. Hjulet */
 .drr-opp-hjul-wrap { position: relative; width: 176px; height: 176px; }
@@ -334,17 +279,7 @@ const OPPSTART_CSS = `
   65% { transform: rotate(4deg); }
 }
 
-/* 3. Terningkast */
-.drr-opp-terning { display: block; color: ${C.cream}; animation: drrOppTerning 900ms cubic-bezier(0.3, 0.7, 0.4, 1) both; }
-@keyframes drrOppTerning {
-  0%   { opacity: 0; transform: translateX(-180px) rotate(-400deg) scale(0.65); }
-  55%  { opacity: 1; }
-  72%  { opacity: 1; transform: translateX(16px) rotate(14deg) scale(1.08); }
-  86%  { transform: translateX(-7px) rotate(-7deg) scale(0.97); }
-  100% { opacity: 1; transform: none; }
-}
-
-/* 4. Dekketøy */
+/* 3. Dekketøy */
 .drr-opp-bord { position: relative; width: 240px; height: 160px; display: flex; align-items: center; justify-content: center; }
 .drr-opp-tallerken {
   width: 108px; height: 108px;
@@ -369,7 +304,7 @@ const OPPSTART_CSS = `
 @keyframes drrOppBestikk { from { opacity: 0; transform: translateX(-96px) rotate(-95deg); } to { opacity: 1; transform: none; } }
 @keyframes drrOppGlass { from { opacity: 0; transform: translateX(96px) rotate(95deg); } to { opacity: 1; transform: none; } }
 
-/* 5. Damp */
+/* 4. Damp */
 .drr-opp-damp-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .drr-opp-damp path { stroke-dasharray: 26 74; animation: drrOppDamp 2200ms linear infinite; }
 .drr-opp-suppe { color: ${C.cream}; animation: drrOppSuppe 2200ms ease-in-out infinite; }
@@ -380,41 +315,6 @@ const OPPSTART_CSS = `
   100% { stroke-dashoffset: 0; opacity: 0; }
 }
 @keyframes drrOppSuppe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-
-/* 6. Ukedagene */
-.drr-opp-uke { display: grid; grid-auto-flow: column; grid-auto-columns: max-content; align-items: center; gap: 5px; }
-.drr-opp-dag {
-  display: inline-grid;
-  border-radius: 999px;
-  background: ${C.panel};
-  border: 1px solid ${C.border};
-  color: ${C.gold};
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  padding: 7px 8px;
-  animation: drrOppDag 400ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
-}
-.drr-opp-dag > span { grid-area: 1 / 1; text-align: center; }
-.drr-opp-dag-idag {
-  color: ${C.bg};
-  background: ${C.gold};
-  border-color: ${C.gold};
-  animation: drrOppDag 400ms cubic-bezier(0.2, 1.5, 0.4, 1) both,
-             drrOppDagIdag 460ms cubic-bezier(0.2, 0.8, 0.3, 1) 1040ms both;
-}
-.drr-opp-dag-idag .drr-opp-dag-navn { animation: drrOppUt 460ms ease 1040ms both; }
-.drr-opp-dag-idag .drr-opp-dag-dato { animation: drrOppInn 460ms ease 1040ms both; }
-@keyframes drrOppDag { from { opacity: 0; transform: translateY(-10px) scale(0.7); } to { opacity: 1; transform: none; } }
-@keyframes drrOppDagIdag {
-  0%   { background: ${C.gold}; border-color: ${C.gold}; transform: scale(1); }
-  45%  { transform: scale(1.16); }
-  100% { background: ${C.orange}; border-color: ${C.orange}; transform: scale(1.06); }
-}
-@keyframes drrOppUt { 0%, 35% { opacity: 1; } 55%, 100% { opacity: 0; } }
-@keyframes drrOppInn { 0%, 55% { opacity: 0; } 100% { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   .drr-opp * { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
