@@ -61,20 +61,25 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setOkt(data.session ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s2) => {
+    // Merk: Supabase sender et SIGNED_IN-event også når en lagret økt gjenopprettes
+    // ved sideinnlasting, ikke bare ved en faktisk innlogging - så det skiller ikke
+    // de to tilfellene. nyligInnlogget settes derfor direkte fra Login sin send()
+    // i stedet, rett etter et vellykket loggInn()-kall.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s2) => {
       setOkt(s2 ?? null);
       if (!s2) {
         setProfil(null);
         setHusholdning(null);
         setDorApen(true);
         setNyligInnlogget(false);
-      } else if (event === "SIGNED_IN") {
-        // Ekte innlogging (ikke stille gjenoppretting av økt) - vis døren til data er klare.
-        setNyligInnlogget(true);
-        setDorApen(false);
       }
     });
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const varsleInnlogget = useCallback(() => {
+    setNyligInnlogget(true);
+    setDorApen(false);
   }, []);
 
   const lastProfil = useCallback(async () => {
@@ -195,7 +200,7 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <Login />
+        <Login onLoggetInn={varsleInnlogget} />
       </>
     );
   }

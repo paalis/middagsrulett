@@ -3,7 +3,7 @@ import { ChefHat, LogIn, UserPlus, Loader2 } from "lucide-react";
 import { C, SANS, SERIF, s } from "./styles.js";
 import { loggInn, registrer, gyldigBrukernavn } from "./lib/auth.js";
 
-export default function Login() {
+export default function Login({ onLoggetInn }) {
   const [modus, setModus] = useState("logg-inn");
   const [brukernavn, setBrukernavn] = useState("");
   const [passord, setPassord] = useState("");
@@ -28,7 +28,10 @@ export default function Login() {
     setJobber(true);
     try {
       if (nyBruker) await registrer(n, passord);
-      else await loggInn(n, passord);
+      else {
+        await loggInn(n, passord);
+        onLoggetInn?.();
+      }
     } catch (e) {
       setFeil(e.message);
     } finally {

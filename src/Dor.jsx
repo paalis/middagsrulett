@@ -4,7 +4,7 @@ import { C, SANS, s } from "./styles.js";
 import { playConfirm } from "./lib/sound.js";
 import { reduserBevegelse } from "./Oppstart.jsx";
 
-const APNE_MS = 620;
+const APNE_MS = 950;
 
 // Vises rett etter en ekte innlogging (ikke ved stille gjenoppretting av økt).
 // Døren står lukket mens profil/husholdning hentes, og svinger opp idet klar
@@ -51,7 +51,7 @@ const DOR_CSS = `
   position: relative;
   width: 200px;
   height: 240px;
-  perspective: 900px;
+  perspective: 1400px;
 }
 .drr-dor-ramme {
   position: absolute;
@@ -93,20 +93,28 @@ const DOR_CSS = `
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.08); }
 }
-.drr-dor-apner .drr-dor-venstre { animation: drrDorVenstre ${APNE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) both; }
-.drr-dor-apner .drr-dor-hoyre { animation: drrDorHoyre ${APNE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.drr-dor-apner .drr-dor-venstre { animation: drrDorVenstre ${APNE_MS}ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.drr-dor-apner .drr-dor-hoyre { animation: drrDorHoyre ${APNE_MS}ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .drr-dor-apner .drr-dor-lys { animation: drrDorLysApner ${APNE_MS}ms ease both; }
 .drr-dor-apner .drr-dor-hatt { animation: drrDorHattApner ${APNE_MS}ms ease both; }
-@keyframes drrDorVenstre { to { transform: rotateY(-108deg); opacity: 0.2; } }
-@keyframes drrDorHoyre { to { transform: rotateY(108deg); opacity: 0.2; } }
+@keyframes drrDorVenstre {
+  0%   { transform: rotateY(0deg); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: rotateY(-100deg); opacity: 0.35; }
+}
+@keyframes drrDorHoyre {
+  0%   { transform: rotateY(0deg); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: rotateY(100deg); opacity: 0.35; }
+}
 @keyframes drrDorLysApner {
   0% { opacity: 0.1; }
-  45% { opacity: 0.9; }
+  55% { opacity: 0.9; }
   100% { opacity: 0; }
 }
 @keyframes drrDorHattApner {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  40% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  55%  { opacity: 1; transform: translate(-50%, -50%) scale(1.22); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
 }
 @media (prefers-reduced-motion: reduce) {
