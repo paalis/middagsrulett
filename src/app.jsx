@@ -10,6 +10,7 @@ import RecipeEditor from "./RecipeEditor.jsx";
 import RetterView from "./RetterView.jsx";
 import Login from "./Login.jsx";
 import HusholdningOppsett from "./HusholdningOppsett.jsx";
+import Dor from "./Dor.jsx";
 import { hentProfil, hentHusholdning, loggUt } from "./lib/auth.js";
 import Oppstart, { OPPSTART_MS, skalViseOppstart, markerOppstartVist } from "./Oppstart.jsx";
 
@@ -24,6 +25,8 @@ export default function App() {
   const [profil, setProfil] = useState(null);
   const [husholdning, setHusholdning] = useState(null);
   const [splashFerdig, setSplashFerdig] = useState(() => !skalViseOppstart());
+  const [dorApen, setDorApen] = useState(true);
+  const [nyligInnlogget, setNyligInnlogget] = useState(false);
 
   useEffect(() => {
     if (splashFerdig) return;
@@ -58,9 +61,18 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setOkt(data.session ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s2) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s2) => {
       setOkt(s2 ?? null);
-      if (!s2) { setProfil(null); setHusholdning(null); }
+      if (!s2) {
+        setProfil(null);
+        setHusholdning(null);
+        setDorApen(true);
+        setNyligInnlogget(false);
+      } else if (event === "SIGNED_IN") {
+        // Ekte innlogging (ikke stille gjenoppretting av økt) - vis døren til data er klare.
+        setNyligInnlogget(true);
+        setDorApen(false);
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -191,15 +203,26 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <HusholdningOppsett brukernavn={profil.brukernavn} onFerdig={lastProfil} />
+        <HusholdningOppsett
+          brukernavn={profil.brukernavn}
+          onFerdig={async () => {
+            await lastProfil();
+            setDorApen(true);
+          }}
+        />
       </>
     );
   }
-  if (!profil || !husholdning) {
+  const husholdningKlar = !!(profil && husholdning);
+  if (!husholdningKlar || !dorApen) {
     return (
       <>
         <style>{CSS}</style>
-        <Oppstart variant="damp" />
+        {nyligInnlogget ? (
+          <Dor klar={husholdningKlar} onApnet={() => setDorApen(true)} />
+        ) : (
+          <Oppstart variant="damp" />
+        )}
       </>
     );
   }
