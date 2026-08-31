@@ -86,7 +86,7 @@ const playCarRev = () => {
 };
 
 // Jackpot: myntklirr over stigende arpeggio
-const playJackpot = (offset = 0) => {
+export const playJackpot = (offset = 0) => {
   const arp = [523.25, 659.25, 783.99, 1046.5];
   arp.forEach((f, i) => playTone(f, offset + i * 0.075, 0.22, 0.12));
   const coins = [0.3, 0.37, 0.43, 0.5, 0.55, 0.62, 0.7, 0.79];
