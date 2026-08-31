@@ -11,6 +11,7 @@ import RetterView from "./RetterView.jsx";
 import Login from "./Login.jsx";
 import HusholdningOppsett from "./HusholdningOppsett.jsx";
 import { hentProfil, hentHusholdning, loggUt } from "./lib/auth.js";
+import Oppstart, { OPPSTART_MS, skalViseOppstart, markerOppstartVist } from "./Oppstart.jsx";
 
 export default function App() {
   const [tab, setTab] = useState("rulett");
@@ -22,6 +23,21 @@ export default function App() {
   const [okt, setOkt] = useState(undefined);
   const [profil, setProfil] = useState(null);
   const [husholdning, setHusholdning] = useState(null);
+  const [splashFerdig, setSplashFerdig] = useState(() => !skalViseOppstart());
+
+  useEffect(() => {
+    if (splashFerdig) return;
+    const t = setTimeout(() => {
+      markerOppstartVist();
+      setSplashFerdig(true);
+    }, OPPSTART_MS);
+    return () => clearTimeout(t);
+  }, [splashFerdig]);
+
+  const hoppOverSplash = useCallback(() => {
+    markerOppstartVist();
+    setSplashFerdig(true);
+  }, []);
 
   const fetchAll = useCallback(async () => {
     if (!husholdning) return;
@@ -147,12 +163,20 @@ export default function App() {
     { id: "retter", label: "Retter", icon: UtensilsCrossed },
   ];
 
+  if (!splashFerdig) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <Oppstart onFerdig={hoppOverSplash} />
+      </>
+    );
+  }
   if (okt === undefined) {
     return (
-      <div style={{ ...s.page, alignItems: "center", justifyContent: "center" }}>
+      <>
         <style>{CSS}</style>
-        <p style={{ ...s.muted, color: C.dim }}>Laster</p>
-      </div>
+        <Oppstart variant="damp" />
+      </>
     );
   }
   if (!okt) {
@@ -173,10 +197,10 @@ export default function App() {
   }
   if (!profil || !husholdning) {
     return (
-      <div style={{ ...s.page, alignItems: "center", justifyContent: "center" }}>
+      <>
         <style>{CSS}</style>
-        <p style={{ ...s.muted, color: C.dim }}>Laster</p>
-      </div>
+        <Oppstart variant="damp" />
+      </>
     );
   }
 
