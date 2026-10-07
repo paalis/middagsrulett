@@ -352,31 +352,72 @@ body { margin: 0; background: #1B2420; }
 .drr-input:focus { outline: 2px solid #E2793A; outline-offset: 1px; }
 .drr-chip button:focus-visible { outline: 2px solid #F2E8D5; outline-offset: 1px; }
 .drr-spin:focus-visible { outline: 3px solid #F2E8D5; outline-offset: 3px; }
-/* Spilleautomat-rulle: begge hjulene glir sammen som én strimmel, med uskarphet i farta og et lite klonk i stopp */
-@keyframes drrReelOutOpp {
-  0% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
-  100% { transform: translateY(-112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
+/* Hjulet spinner først på stedet og bygger fart, før det får grep og skyter ut til siden.
+   Utrullingen er regnet ut steg for steg (lineær mellom stegene) så farta aldri hakker mellom fasene.
+   Det nye hjulet ruller inn med rotasjon som passer strekningen (vinkel = avstand / radius),
+   bremser ned, ruller litt for langt og vipper tilbake. */
+@keyframes drrRollOutRight {
+  0% { transform: translateX(0%) translateY(0.0px) rotate(0deg); filter: blur(0.0px); }
+  5% { transform: translateX(-0.4%) translateY(0.2px) rotate(3deg); filter: blur(0.1px); }
+  10% { transform: translateX(-0.9%) translateY(0.4px) rotate(13deg); filter: blur(0.1px); }
+  15% { transform: translateX(-1.2%) translateY(0.7px) rotate(29deg); filter: blur(0.2px); }
+  20% { transform: translateX(-1.6%) translateY(0.9px) rotate(51deg); filter: blur(0.3px); }
+  25% { transform: translateX(-1.9%) translateY(1.1px) rotate(80deg); filter: blur(0.3px); }
+  30% { transform: translateX(-2.2%) translateY(1.3px) rotate(116deg); filter: blur(0.4px); }
+  35% { transform: translateX(-2.3%) translateY(1.6px) rotate(157deg); filter: blur(0.5px); }
+  40% { transform: translateX(-2.5%) translateY(1.8px) rotate(205deg); filter: blur(0.5px); }
+  45% { transform: translateX(-2.5%) translateY(2.0px) rotate(260deg); filter: blur(0.6px); }
+  50% { transform: translateX(-1.2%) translateY(1.8px) rotate(309deg); filter: blur(0.6px); }
+  55% { transform: translateX(2.5%) translateY(1.6px) rotate(344deg); filter: blur(0.7px); }
+  60% { transform: translateX(8.8%) translateY(1.5px) rotate(372deg); filter: blur(0.8px); }
+  65% { transform: translateX(17.7%) translateY(1.3px) rotate(396deg); filter: blur(0.9px); }
+  70% { transform: translateX(29.0%) translateY(1.1px) rotate(418deg); filter: blur(1.1px); }
+  75% { transform: translateX(42.9%) translateY(0.9px) rotate(439deg); filter: blur(1.3px); }
+  80% { transform: translateX(59.3%) translateY(0.7px) rotate(462deg); filter: blur(1.6px); }
+  85% { transform: translateX(78.2%) translateY(0.5px) rotate(486deg); filter: blur(1.9px); }
+  90% { transform: translateX(99.6%) translateY(0.4px) rotate(512deg); filter: blur(2.2px); }
+  95% { transform: translateX(123.5%) translateY(0.2px) rotate(541deg); filter: blur(2.6px); }
+  100% { transform: translateX(150.0%) translateY(0.0px) rotate(572deg); filter: blur(3.0px); }
 }
-@keyframes drrReelOutNed {
-  0% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
-  100% { transform: translateY(112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
+@keyframes drrRollOutLeft {
+  0% { transform: translateX(0.0%) translateY(0.0px) rotate(0deg); filter: blur(0.0px); }
+  5% { transform: translateX(0.4%) translateY(0.2px) rotate(-3deg); filter: blur(0.1px); }
+  10% { transform: translateX(0.9%) translateY(0.4px) rotate(-13deg); filter: blur(0.1px); }
+  15% { transform: translateX(1.2%) translateY(0.7px) rotate(-29deg); filter: blur(0.2px); }
+  20% { transform: translateX(1.6%) translateY(0.9px) rotate(-51deg); filter: blur(0.3px); }
+  25% { transform: translateX(1.9%) translateY(1.1px) rotate(-80deg); filter: blur(0.3px); }
+  30% { transform: translateX(2.2%) translateY(1.3px) rotate(-116deg); filter: blur(0.4px); }
+  35% { transform: translateX(2.3%) translateY(1.6px) rotate(-157deg); filter: blur(0.5px); }
+  40% { transform: translateX(2.5%) translateY(1.8px) rotate(-205deg); filter: blur(0.5px); }
+  45% { transform: translateX(2.5%) translateY(2.0px) rotate(-260deg); filter: blur(0.6px); }
+  50% { transform: translateX(1.2%) translateY(1.8px) rotate(-309deg); filter: blur(0.6px); }
+  55% { transform: translateX(-2.5%) translateY(1.6px) rotate(-344deg); filter: blur(0.7px); }
+  60% { transform: translateX(-8.8%) translateY(1.5px) rotate(-372deg); filter: blur(0.8px); }
+  65% { transform: translateX(-17.7%) translateY(1.3px) rotate(-396deg); filter: blur(0.9px); }
+  70% { transform: translateX(-29.0%) translateY(1.1px) rotate(-418deg); filter: blur(1.1px); }
+  75% { transform: translateX(-42.9%) translateY(0.9px) rotate(-439deg); filter: blur(1.3px); }
+  80% { transform: translateX(-59.3%) translateY(0.7px) rotate(-462deg); filter: blur(1.6px); }
+  85% { transform: translateX(-78.2%) translateY(0.5px) rotate(-486deg); filter: blur(1.9px); }
+  90% { transform: translateX(-99.6%) translateY(0.4px) rotate(-512deg); filter: blur(2.2px); }
+  95% { transform: translateX(-123.5%) translateY(0.2px) rotate(-541deg); filter: blur(2.6px); }
+  100% { transform: translateX(-150.0%) translateY(0.0px) rotate(-572deg); filter: blur(3.0px); }
 }
-@keyframes drrReelInOpp {
-  0% { transform: translateY(112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
-  55% { transform: translateY(-7%) scale(1.02, 0.98); filter: blur(0); opacity: 1; }
-  75% { transform: translateY(2.5%) scale(0.99, 1.01); }
-  100% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+@keyframes drrRollInRight {
+  0%   { transform: translateX(150%) rotate(172deg); filter: blur(3px); }
+  70%  { transform: translateX(-5%) rotate(-6deg); filter: blur(0); }
+  86%  { transform: translateX(1.5%) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0deg); filter: blur(0); }
 }
-@keyframes drrReelInNed {
-  0% { transform: translateY(-112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
-  55% { transform: translateY(7%) scale(1.02, 0.98); filter: blur(0); opacity: 1; }
-  75% { transform: translateY(-2.5%) scale(0.99, 1.01); }
-  100% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+@keyframes drrRollInLeft {
+  0%   { transform: translateX(-150%) rotate(-172deg); filter: blur(3px); }
+  70%  { transform: translateX(5%) rotate(6deg); filter: blur(0); }
+  86%  { transform: translateX(-1.5%) rotate(-2deg); }
+  100% { transform: translateX(0) rotate(0deg); filter: blur(0); }
 }
-.drr-reel-out-opp { animation: drrReelOutOpp 300ms cubic-bezier(0.55, 0, 0.85, 0.35) forwards; }
-.drr-reel-out-ned { animation: drrReelOutNed 300ms cubic-bezier(0.55, 0, 0.85, 0.35) forwards; }
-.drr-reel-in-opp { animation: drrReelInOpp 560ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both; }
-.drr-reel-in-ned { animation: drrReelInNed 560ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both; }
+.drr-roll-out-left { animation: drrRollOutLeft 720ms linear forwards; }
+.drr-roll-out-right { animation: drrRollOutRight 720ms linear forwards; }
+.drr-roll-in-right { animation: drrRollInRight 560ms cubic-bezier(0.2, 0.65, 0.35, 1) 600ms both; }
+.drr-roll-in-left { animation: drrRollInLeft 560ms cubic-bezier(0.2, 0.65, 0.35, 1) 600ms both; }
 @keyframes drrWinnerIn {
   from { opacity: 0; transform: translateY(10px) scale(0.97); }
   to { opacity: 1; transform: none; }
@@ -387,8 +428,8 @@ body { margin: 0; background: #1B2420; }
 @media (prefers-reduced-motion: reduce) {
   .drr-wheel { transition: none !important; }
   .drr-mode-thumb { transition: none !important; }
-  .drr-reel-out-opp, .drr-reel-out-ned,
-  .drr-reel-in-opp, .drr-reel-in-ned,
+  .drr-roll-out-left, .drr-roll-out-right,
+  .drr-roll-in-right, .drr-roll-in-left,
   .drr-winner {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;

@@ -71,8 +71,7 @@ export default function RouletteView({ retter, onPlan }) {
     if (m === mode || spinning) return;
     if (soundOn) playToggle(m === "helg");
     setOutgoing({ items: wheelItems, key: mode });
-    // Hjulene sitter på en loddrett rulle: helg ligger "under" hverdag
-    setRollDir(m === "helg" ? "opp" : "ned");
+    setRollDir(m === "helg" ? "left" : "right");
     setMode(m);
     setWinner(null);
     setShowDates(false);
@@ -81,7 +80,7 @@ export default function RouletteView({ retter, onPlan }) {
     rollTimeout.current = setTimeout(() => {
       setOutgoing(null);
       setRollDir(null);
-    }, 700);
+    }, 1200);
   }, [mode, spinning, soundOn, wheelItems]);
 
   const pickDate = async (d) => {
@@ -191,7 +190,7 @@ export default function RouletteView({ retter, onPlan }) {
         {outgoing && (
           <div
             key={`out-${outgoing.key}`}
-            className={rollDir === "opp" ? "drr-reel-out-opp" : "drr-reel-out-ned"}
+            className={rollDir === "left" ? "drr-roll-out-left" : "drr-roll-out-right"}
             style={w.slot}
           >
             {renderWheel(outgoing.items, rotation, null)}
@@ -199,7 +198,7 @@ export default function RouletteView({ retter, onPlan }) {
         )}
         <div
           key={`in-${mode}`}
-          className={rollDir === "opp" ? "drr-reel-in-opp" : rollDir === "ned" ? "drr-reel-in-ned" : ""}
+          className={rollDir === "left" ? "drr-roll-in-right" : rollDir === "right" ? "drr-roll-in-left" : ""}
           style={w.slot}
         >
           {renderWheel(wheelItems, rotation, `Ingen retter for ${mode} enda`)}
