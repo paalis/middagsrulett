@@ -71,7 +71,8 @@ export default function RouletteView({ retter, onPlan }) {
     if (m === mode || spinning) return;
     if (soundOn) playToggle(m === "helg");
     setOutgoing({ items: wheelItems, key: mode });
-    setRollDir(m === "helg" ? "left" : "right");
+    // Hjulene sitter på en loddrett rulle: helg ligger "under" hverdag
+    setRollDir(m === "helg" ? "opp" : "ned");
     setMode(m);
     setWinner(null);
     setShowDates(false);
@@ -80,7 +81,7 @@ export default function RouletteView({ retter, onPlan }) {
     rollTimeout.current = setTimeout(() => {
       setOutgoing(null);
       setRollDir(null);
-    }, 900);
+    }, 700);
   }, [mode, spinning, soundOn, wheelItems]);
 
   const pickDate = async (d) => {
@@ -157,18 +158,25 @@ export default function RouletteView({ retter, onPlan }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-      <div style={w.modeToggle} role="tablist" aria-label="Velg hjul">
-        {["hverdag", "helg"].map((m) => (
-          <button
-            key={m}
-            role="tab"
-            aria-selected={mode === m}
-            onClick={() => switchMode(m)}
-            style={{ ...w.modeButton, ...(mode === m ? w.modeButtonActive : {}) }}
-          >
-            {m === "hverdag" ? "Hverdag" : "Helg"}
-          </button>
-        ))}
+      <div style={w.modeToggle}>
+        <div style={w.modeTabs} role="tablist" aria-label="Velg hjul">
+          <span
+            className="drr-mode-thumb"
+            style={{ ...w.modeThumb, transform: mode === "helg" ? "translateX(100%)" : "translateX(0)" }}
+            aria-hidden="true"
+          />
+          {["hverdag", "helg"].map((m) => (
+            <button
+              key={m}
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => switchMode(m)}
+              style={{ ...w.modeButton, ...(mode === m ? w.modeButtonActive : {}) }}
+            >
+              {m === "hverdag" ? "Hverdag" : "Helg"}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setSoundOn((v) => !v)}
           aria-label={soundOn ? "Skru av lyd" : "Skru på lyd"}
@@ -183,7 +191,7 @@ export default function RouletteView({ retter, onPlan }) {
         {outgoing && (
           <div
             key={`out-${outgoing.key}`}
-            className={rollDir === "left" ? "drr-roll-out-left" : "drr-roll-out-right"}
+            className={rollDir === "opp" ? "drr-reel-out-opp" : "drr-reel-out-ned"}
             style={w.slot}
           >
             {renderWheel(outgoing.items, rotation, null)}
@@ -191,7 +199,7 @@ export default function RouletteView({ retter, onPlan }) {
         )}
         <div
           key={`in-${mode}`}
-          className={rollDir === "left" ? "drr-roll-in-right" : rollDir === "right" ? "drr-roll-in-left" : ""}
+          className={rollDir === "opp" ? "drr-reel-in-opp" : rollDir === "ned" ? "drr-reel-in-ned" : ""}
           style={w.slot}
         >
           {renderWheel(wheelItems, rotation, `Ingen retter for ${mode} enda`)}
@@ -270,6 +278,17 @@ const w = {
     padding: "4px",
     gap: "4px",
   },
+  modeTabs: { position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr" },
+  modeThumb: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: "50%",
+    borderRadius: "999px",
+    background: C.orange,
+    transition: "transform 0.38s cubic-bezier(0.3, 1.4, 0.5, 1)",
+  },
   modeButton: {
     background: "transparent",
     border: "none",
@@ -280,9 +299,11 @@ const w = {
     fontSize: "13.5px",
     color: C.muted,
     cursor: "pointer",
-    transition: "background 0.15s ease, color 0.15s ease",
+    position: "relative",
+    zIndex: 1,
+    transition: "color 0.2s ease",
   },
-  modeButtonActive: { background: C.orange, color: C.bg },
+  modeButtonActive: { color: C.bg },
   viewport: { position: "relative", width: "100%", height: `${WHEEL_SIZE}px`, overflow: "hidden" },
   slot: {
     position: "absolute",

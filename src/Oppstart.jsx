@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import { Carrot, Egg, Fish, Beef, Croissant, Apple, CookingPot, Utensils, Wine, Soup } from "lucide-react";
+import { Carrot, Egg, Fish, Beef, Croissant, Apple, CookingPot, Utensils, UtensilsCrossed, Wine, Soup } from "lucide-react";
 import { C, WHEEL_COLORS, SANS, SERIF } from "./styles.js";
 
-export const VARIANTER = ["hjul", "ingredienser", "dekketoy", "damp"];
+export const VARIANTER = ["kule", "hjul", "ingredienser", "dekketoy", "damp"];
 
-// Lengste variant lander på ~1500ms, så holder vi bildet et lite øyeblikk. Splashen vises aldri lenger enn dette.
-export const OPPSTART_MS = 1700;
+// Kula lander på ~1450ms og tittelen er på plass ~1900ms, så holder vi bildet et lite øyeblikk.
+// Splashen vises aldri lenger enn dette.
+export const OPPSTART_MS = 2300;
 
 const NOKKEL_VIST = "drr-oppstart-vist";
-const NOKKEL_VARIANT = "drr-oppstart-variant";
 
 export const reduserBevegelse = () =>
   typeof window !== "undefined" &&
@@ -22,21 +22,8 @@ const variantFraUrl = () => {
   return VARIANTER.includes(v) ? v : null;
 };
 
-const tilfeldigVariant = () => VARIANTER[Math.floor(Math.random() * VARIANTER.length)];
-
-export const velgVariant = () => {
-  const tvunget = variantFraUrl();
-  if (tvunget) return tvunget;
-  try {
-    const lagret = sessionStorage.getItem(NOKKEL_VARIANT);
-    if (VARIANTER.includes(lagret)) return lagret;
-    const ny = tilfeldigVariant();
-    sessionStorage.setItem(NOKKEL_VARIANT, ny);
-    return ny;
-  } catch {
-    return tilfeldigVariant();
-  }
-};
+// Kulerulett er introen; de eldre variantene kan fortsatt hentes fram med ?oppstart=
+export const velgVariant = () => variantFraUrl() || "kule";
 
 // Vises én gang per økt, og aldri for de som har bedt om mindre bevegelse
 export const skalViseOppstart = () => {
@@ -56,6 +43,57 @@ export const markerOppstartVist = () => {
     /* privat modus - da får vi bare vise den igjen */
   }
 };
+
+/* 0. Kulerulett - hjulet snurrer inn, kula går rundt og lander i en rute */
+const KULE_SEG = 360 / WHEEL_COLORS.length;
+const KULE_BAKGRUNN = `conic-gradient(${WHEEL_COLORS.map(
+  (farge, i) => `${farge} ${i * KULE_SEG}deg ${(i + 1) * KULE_SEG}deg`
+).join(", ")})`;
+
+function Kule() {
+  return (
+    <div className="drr-opp-kule-wrap">
+      <div className="drr-opp-kule-hjul" style={{ background: KULE_BAKGRUNN }}>
+        <i className="drr-opp-kule-treff" />
+        {WHEEL_COLORS.map((_, i) => (
+          <span key={i} className="drr-opp-kule-ribbe" style={{ transform: `rotate(${i * KULE_SEG}deg)` }} />
+        ))}
+      </div>
+      <div className="drr-opp-kule-nav">
+        <UtensilsCrossed size={26} strokeWidth={2} />
+      </div>
+      <span className="drr-opp-kule" />
+    </div>
+  );
+}
+
+// Hver bokstav ruller forbi noen tilfeldige før den lander, som hjulene på en spilleautomat
+const RULLE_TEGN = "ABDEFGHIKLMNOPRSTUVØÅ";
+
+function TittelRulle({ tekst }) {
+  const strimler = useMemo(
+    () =>
+      [...tekst].map((tegn) => [
+        ...Array.from({ length: 4 }, () => RULLE_TEGN[Math.floor(Math.random() * RULLE_TEGN.length)]),
+        tegn,
+      ]),
+    [tekst]
+  );
+  return (
+    <h1 className="drr-opp-tittel drr-opp-rulle" aria-label={tekst}>
+      {strimler.map((strimmel, i) => (
+        <span key={i} className="drr-opp-rulle-vindu" aria-hidden="true">
+          <span className="drr-opp-rulle-mal">{strimmel[strimmel.length - 1]}</span>
+          <span className="drr-opp-rulle-strimmel" style={{ animationDelay: `${780 + i * 55}ms` }}>
+            {strimmel.map((tegn, j) => (
+              <span key={j}>{tegn}</span>
+            ))}
+          </span>
+        </span>
+      ))}
+    </h1>
+  );
+}
 
 /* 1. Hjulet som tegner seg selv */
 function Hjul() {
@@ -147,6 +185,7 @@ function Damp() {
 }
 
 const SCENER = {
+  kule: Kule,
   hjul: Hjul,
   ingredienser: Ingredienser,
   dekketoy: Dekketoy,
@@ -157,7 +196,7 @@ const TITTEL = "Middagsrulett";
 
 export default function Oppstart({ variant, onFerdig }) {
   const valgt = useMemo(() => (VARIANTER.includes(variant) ? variant : velgVariant()), [variant]);
-  const Scene = SCENER[valgt] || Hjul;
+  const Scene = SCENER[valgt] || Kule;
 
   return (
     <div
@@ -172,7 +211,14 @@ export default function Oppstart({ variant, onFerdig }) {
       <div className="drr-opp-scene" aria-hidden="true">
         <Scene />
       </div>
-      <h1 className="drr-opp-tittel drr-opp-tittel-inn">{TITTEL}</h1>
+      {valgt === "kule" ? (
+        <>
+          <TittelRulle tekst={TITTEL} />
+          <p className="drr-opp-undertittel">Hva blir det til middag?</p>
+        </>
+      ) : (
+        <h1 className="drr-opp-tittel drr-opp-tittel-inn">{TITTEL}</h1>
+      )}
     </div>
   );
 }
@@ -215,6 +261,83 @@ const OPPSTART_CSS = `
 }
 .drr-opp-tittel-inn { animation: drrOppTittel 520ms cubic-bezier(0.2, 0.7, 0.3, 1) 950ms both; }
 @keyframes drrOppTittel { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* 0. Kulerulett */
+.drr-opp-kule-wrap { position: relative; width: 184px; height: 184px; }
+.drr-opp-kule-hjul {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 5px solid ${C.cream};
+  box-shadow: 0 14px 34px rgba(0,0,0,0.45), inset 0 0 0 2px ${C.bg};
+  animation: drrOppKuleHjul 1000ms cubic-bezier(0.12, 0.8, 0.25, 1) both;
+}
+.drr-opp-kule-ribbe {
+  position: absolute; left: 50%; top: 0;
+  width: 2px; height: 50%; margin-left: -1px;
+  background: ${C.bg};
+  opacity: 0.55;
+  transform-origin: 50% 100%;
+}
+.drr-opp-kule-treff {
+  position: absolute; inset: 0; display: block;
+  background: ${C.cream};
+  clip-path: polygon(50% 50%, 50% -2%, 102% -2%);
+  opacity: 0;
+  animation: drrOppKuleTreff 700ms ease-out 1420ms both;
+}
+.drr-opp-kule-nav {
+  position: absolute; left: 50%; top: 50%;
+  width: 62px; height: 62px; margin: -31px 0 0 -31px;
+  border-radius: 50%;
+  background: ${C.bg};
+  border: 4px solid ${C.cream};
+  color: ${C.cream};
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  animation: drrOppKuleNav 520ms cubic-bezier(0.2, 1.5, 0.4, 1) 1440ms both;
+}
+.drr-opp-kule-nav svg { animation: drrOppKuleIkon 520ms cubic-bezier(0.2, 1.5, 0.4, 1) 1440ms both; }
+.drr-opp-kule {
+  position: absolute; left: 50%; top: 50%;
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 22%, ${C.cream} 45%, #B9AE98 100%);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  animation: drrOppKule 1300ms cubic-bezier(0.25, 0.6, 0.35, 1) 150ms both;
+}
+@keyframes drrOppKuleHjul { from { opacity: 0; transform: rotate(-720deg) scale(0.3); } to { opacity: 1; transform: none; } }
+@keyframes drrOppKule {
+  0%   { opacity: 0; transform: rotate(-560deg) translateY(-104px); }
+  10%  { opacity: 1; }
+  62%  { transform: rotate(-40deg) translateY(-80px); }
+  80%  { transform: rotate(25deg) translateY(-58px); }
+  88%  { transform: rotate(36deg) translateY(-66px); }
+  94%  { transform: rotate(24deg) translateY(-60px); }
+  100% { opacity: 1; transform: rotate(22.5deg) translateY(-62px); }
+}
+@keyframes drrOppKuleTreff { 0% { opacity: 0; } 25% { opacity: 0.7; } 100% { opacity: 0.22; } }
+@keyframes drrOppKuleNav { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes drrOppKuleIkon { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.drr-opp-rulle { display: flex; justify-content: center; line-height: 1.2; }
+/* Vinduet får bredden til bokstaven det lander på, så tittelen ikke blir glissen */
+.drr-opp-rulle-vindu { position: relative; display: inline-block; height: 1.2em; overflow: hidden; white-space: pre; }
+.drr-opp-rulle-mal { visibility: hidden; }
+.drr-opp-rulle-strimmel {
+  position: absolute; top: 0; left: 50%; width: 2em; margin-left: -1em;
+  display: flex; flex-direction: column;
+  animation: drrOppRulle 620ms cubic-bezier(0.3, 0.1, 0.25, 1.25) both;
+}
+.drr-opp-rulle-strimmel > span { display: block; height: 1.2em; text-align: center; }
+@keyframes drrOppRulle { from { transform: translateY(0); opacity: 0; } 30% { opacity: 1; } to { transform: translateY(-4.8em); opacity: 1; } }
+.drr-opp-undertittel {
+  margin: -14px 0 0;
+  color: ${C.muted};
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  animation: drrOppTittel 480ms cubic-bezier(0.2, 0.7, 0.3, 1) 1650ms both;
+}
 
 /* 1. Hjulet */
 .drr-opp-hjul-wrap { position: relative; width: 176px; height: 176px; }

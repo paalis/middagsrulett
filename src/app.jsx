@@ -352,20 +352,31 @@ body { margin: 0; background: #1B2420; }
 .drr-input:focus { outline: 2px solid #E2793A; outline-offset: 1px; }
 .drr-chip button:focus-visible { outline: 2px solid #F2E8D5; outline-offset: 1px; }
 .drr-spin:focus-visible { outline: 3px solid #F2E8D5; outline-offset: 3px; }
-@keyframes drrRollOutLeft { to { transform: translateX(-135%) rotate(-165deg); opacity: 0.35; } }
-@keyframes drrRollOutRight { to { transform: translateX(135%) rotate(165deg); opacity: 0.35; } }
-@keyframes drrRollInRight {
-  from { transform: translateX(135%) rotate(165deg); opacity: 0.35; }
-  to { transform: translateX(0) rotate(0deg); opacity: 1; }
+/* Spilleautomat-rulle: begge hjulene glir sammen som én strimmel, med uskarphet i farta og et lite klonk i stopp */
+@keyframes drrReelOutOpp {
+  0% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+  100% { transform: translateY(-112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
 }
-@keyframes drrRollInLeft {
-  from { transform: translateX(-135%) rotate(-165deg); opacity: 0.35; }
-  to { transform: translateX(0) rotate(0deg); opacity: 1; }
+@keyframes drrReelOutNed {
+  0% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+  100% { transform: translateY(112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
 }
-.drr-roll-out-left { animation: drrRollOutLeft 420ms cubic-bezier(0.5, 0, 0.9, 0.4) forwards; }
-.drr-roll-out-right { animation: drrRollOutRight 420ms cubic-bezier(0.5, 0, 0.9, 0.4) forwards; }
-.drr-roll-in-right { animation: drrRollInRight 440ms cubic-bezier(0.15, 0.7, 0.4, 1) 430ms both; }
-.drr-roll-in-left { animation: drrRollInLeft 440ms cubic-bezier(0.15, 0.7, 0.4, 1) 430ms both; }
+@keyframes drrReelInOpp {
+  0% { transform: translateY(112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
+  55% { transform: translateY(-7%) scale(1.02, 0.98); filter: blur(0); opacity: 1; }
+  75% { transform: translateY(2.5%) scale(0.99, 1.01); }
+  100% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+}
+@keyframes drrReelInNed {
+  0% { transform: translateY(-112%) scale(0.86, 0.94); filter: blur(4px); opacity: 0.4; }
+  55% { transform: translateY(7%) scale(1.02, 0.98); filter: blur(0); opacity: 1; }
+  75% { transform: translateY(-2.5%) scale(0.99, 1.01); }
+  100% { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+}
+.drr-reel-out-opp { animation: drrReelOutOpp 300ms cubic-bezier(0.55, 0, 0.85, 0.35) forwards; }
+.drr-reel-out-ned { animation: drrReelOutNed 300ms cubic-bezier(0.55, 0, 0.85, 0.35) forwards; }
+.drr-reel-in-opp { animation: drrReelInOpp 560ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both; }
+.drr-reel-in-ned { animation: drrReelInNed 560ms cubic-bezier(0.2, 0.7, 0.3, 1) 120ms both; }
 @keyframes drrWinnerIn {
   from { opacity: 0; transform: translateY(10px) scale(0.97); }
   to { opacity: 1; transform: none; }
@@ -375,8 +386,9 @@ body { margin: 0; background: #1B2420; }
 .drr-spin-icon { animation: drrSpinIcon 900ms linear infinite; }
 @media (prefers-reduced-motion: reduce) {
   .drr-wheel { transition: none !important; }
-  .drr-roll-out-left, .drr-roll-out-right,
-  .drr-roll-in-right, .drr-roll-in-left,
+  .drr-mode-thumb { transition: none !important; }
+  .drr-reel-out-opp, .drr-reel-out-ned,
+  .drr-reel-in-opp, .drr-reel-in-ned,
   .drr-winner {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
